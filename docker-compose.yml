@@ -1,0 +1,36 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: mvclite_app
+    ports:
+      - "${APP_PORT:-8001}:80"
+    volumes:
+      - .:/var/www/html
+    environment:
+      DB_HOST: ${DB_HOST:-db}
+      DB_PORT: ${DB_PORT:-3306}
+      DB_NAME: ${DB_NAME:-pcaiad}
+      DB_USER: ${DB_USER:-test_user}
+      DB_PASS: ${DB_PASS:-password}
+    depends_on:
+      - db
+
+  db:
+    image: mariadb:10.4
+    container_name: mvclite_db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root_password}
+      MYSQL_DATABASE: ${DB_NAME:-pcaiad}
+      MYSQL_USER: ${DB_USER:-test_user}
+      MYSQL_PASSWORD: ${DB_PASS:-password}
+    ports:
+      - "${DB_FORWARD_PORT:-3307}:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+      - ${DB_INIT_SQL:-./.local/private/db/pcaiad.sql}:/docker-entrypoint-initdb.d/init.sql:ro
+
+volumes:
+  db_data:
